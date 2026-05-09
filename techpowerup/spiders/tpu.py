@@ -1,6 +1,11 @@
+from datetime import datetime
+from pathlib import Path
+from time import perf_counter
+
 import scrapy
 from scrapy import signals
-from datetime import datetime
+
+from techpowerup.crawl_metrics import CrawlMetrics
 
 years = range(2024, datetime.now().year + 1)
 gpu_urls = [f'https://www.techpowerup.com/gpu-specs/?year={year}' for year in years]
@@ -15,6 +20,8 @@ class TpuSpider(scrapy.Spider):
         super().__init__(*args, **kwargs)
         self.failed_urls = []
         self.cookie = cookie
+        self.metrics = CrawlMetrics()
+        self.start_urls_count = 0
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -25,22 +32,73 @@ class TpuSpider(scrapy.Spider):
 
     def start_requests(self):
         urls = gpu_urls + cpu_urls
+        self.start_urls_count = len(urls)
         headers = {}
         if self.cookie:
             headers['Cookie'] = self.cookie
+
+        self.logger.info(
+            "crawl_start urls=%s years=%s-%s cookie_present=%s",
+            self.start_urls_count,
+            years.start,
+            years.stop - 1,
+            bool(self.cookie),
+        )
+
         for url in urls:
-            yield scrapy.Request(url, headers=headers)
+            yield scrapy.Request(
+                url,
+                headers=headers,
+                meta={"request_started_at": perf_counter()},
+            )
 
     def parse(self, response):
         if response.status in [403, 404, 429, 410, 500]:
             self.crawler.stats.inc_value('failed_url_count')
             self.failed_urls.append(response.url)
+            started_at = response.meta.get("request_started_at")
+            elapsed = perf_counter() - started_at if started_at else 0.0
+            cached = "cached" in getattr(response, "flags", [])
+            self.metrics.record_response(response.url, response.status, elapsed, cached, 0)
+            self.logger.warning(
+                "response_failed url=%s status=%s elapsed=%.3fs cached=%s",
+                response.url,
+                response.status,
+                elapsed,
+                cached,
+            )
             return
 
+        started_at = response.meta.get("request_started_at")
+        elapsed = perf_counter() - started_at if started_at else 0.0
+        cached = "cached" in getattr(response, "flags", [])
+
         if "gpu" in response.url:
-            yield from self.parse_gpu(response)
+            items = list(self.parse_gpu(response))
         elif "cpu" in response.url:
-            yield from self.parse_cpu(response)
+            items = list(self.parse_cpu(response))
+        else:
+            items = []
+
+        self.metrics.record_response(
+            url=response.url,
+            status=response.status,
+            elapsed=elapsed,
+            cached=cached,
+            item_count=len(items),
+        )
+        self.logger.info(
+            "response url=%s status=%s elapsed=%.3fs cached=%s items=%s",
+            response.url,
+            response.status,
+            elapsed,
+            cached,
+            len(items),
+        )
+
+        for item in items:
+            self.metrics.record_item(item.get('type'))
+            yield item
 
     def parse_gpu(self, response):
         rows = response.xpath('//div[@id="list"]//table//tr[contains(@class, "vendor-")]')
@@ -105,4 +163,31 @@ class TpuSpider(scrapy.Spider):
         return ' '.join(text.split()).strip()
 
     def handle_spider_closed(self, reason):
-        self.crawler.stats.set_value('failed_urls', ', '.join(self.failed_urls))
+        summary = self.metrics.summary()
+        failed_urls = summary["failed_urls"]
+        self.crawler.stats.set_value('failed_urls', ', '.join(failed_urls))
+        self.crawler.stats.set_value('metrics/elapsed_seconds', summary["elapsed_seconds"])
+        self.crawler.stats.set_value('metrics/response_count', summary["response_count"])
+        self.crawler.stats.set_value('metrics/cache_hits', summary["cache_hits"])
+        self.crawler.stats.set_value('metrics/parsed_items', summary["parsed_items"])
+
+        failed_file = self.crawler.settings.get("FAILED_URLS_FILE", "failed_urls.txt")
+        if failed_urls:
+            failed_path = Path(failed_file)
+            if failed_path.parent != Path("."):
+                failed_path.parent.mkdir(parents=True, exist_ok=True)
+            failed_path.write_text("\n".join(failed_urls) + "\n", encoding="utf-8")
+
+        # English/中文: one compact run summary makes performance comparisons easy.
+        # 中文/English：用一条紧凑的运行摘要，方便比较不同性能配置。
+        self.logger.info(
+            "crawl_summary reason=%s elapsed=%.3fs responses=%s statuses=%s cache_hits=%s items=%s item_counts=%s failed=%s",
+            reason,
+            summary["elapsed_seconds"],
+            summary["response_count"],
+            summary["status_counts"],
+            summary["cache_hits"],
+            summary["parsed_items"],
+            summary["item_counts"],
+            len(failed_urls),
+        )
