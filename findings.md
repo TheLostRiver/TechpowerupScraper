@@ -28,3 +28,28 @@
 - 失败 URL 当前只写入 Scrapy stats 的字符串，不利于重跑和排查。
 - 没有结构化运行摘要，难以比较优化前后效果。
 
+## 2026-05-09 基准结果
+
+- safe profile 小样本命令：`python run.py --format json --profile safe -s CLOSESPIDER_PAGECOUNT=1`
+  - Cookie：从 `cookies.json` 自动加载。
+  - 初始 URL：6。
+  - 实际解析页面：1。
+  - 状态码：`{200: 1}`。
+  - cache 命中：1。
+  - item：GPU 41，CPU 0。
+  - JSON 写入耗时：约 0.002 秒。
+  - 结果：`crawl_start`、`response`、`pipeline_json_written`、`crawl_summary` 均正常出现。
+- balanced profile 当前 URL 集命令：`python run.py --format json --profile balanced`
+  - Cookie：从 `cookies.json` 自动加载。
+  - 初始 URL：6。
+  - 状态码：`{200: 6}`。
+  - cache 命中：6。
+  - item：GPU 123，CPU 282，总计 405。
+  - JSON 写入耗时：约 0.005 秒。
+  - 失败 URL：0。
+  - 输出校验：`python -m json.tool cpus.json` 和 `python -m json.tool gpus.json` 通过。
+- 观察：
+  - 当前 6 个列表页在 cache 命中情况下小于 1 秒完成，不是慢点。
+  - JSON 写入耗时毫秒级，不是当前瓶颈。
+  - 如果用户实际遇到“数千条跑数小时”，更可能来自历史全量 URL、详情页 URL、未命中 cache、AutoThrottle/固定 delay 或 bot-check。
+  - Scrapy 2.15.2 提示 `start_requests()` 和 pipeline 方法签名存在 deprecation warning，后续可作为兼容性清理任务。

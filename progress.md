@@ -21,3 +21,8 @@
 - 验证：`python -m unittest tests.test_crawl_metrics tests.test_tpu_spider_metrics tests.test_pipelines_metrics tests.test_diagnostic_settings tests.test_run_profiles -v` 通过 10 个测试；`python -m py_compile run.py tests\test_run_profiles.py` 通过。
 - Task 6 完成：英文和中文 README 增加性能档位、爬虫诊断日志和失败 URL 恢复说明。
 - 验证：`python -m unittest tests.test_crawl_metrics tests.test_tpu_spider_metrics tests.test_pipelines_metrics tests.test_diagnostic_settings tests.test_run_profiles tests.test_readme_docs -v` 通过 12 个测试；README 链接与代码块结构检查通过。
+- Task 7 完成：运行 safe 小样本和 balanced 当前 URL 集基准。
+- safe 小样本：1 个列表页，GPU 41，cache hit 1，失败 0，JSON 写入约 0.002 秒。
+- balanced 当前 URL 集：6 个列表页，GPU 123，CPU 282，总计 405，cache hit 6，失败 0，JSON 写入约 0.005 秒。
+- JSON 校验：`python -m json.tool cpus.json` 和 `python -m json.tool gpus.json` 通过；输出文件保持 git ignored。
+- 发现：Scrapy 2.15.2 输出 `start_requests()` 与 pipeline 方法签名 deprecation warning，建议后续单独清理。
