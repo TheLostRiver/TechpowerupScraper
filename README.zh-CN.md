@@ -54,6 +54,48 @@ python run.py --format json
 
 `cookies.json` 可能包含敏感登录/会话信息，已被 `.gitignore` 忽略，不应提交到仓库。
 
+## 性能档位
+
+可以使用 `run.py --profile` 选择可重复的爬取速度：
+
+- `safe`：单请求、5 秒延迟，适合首次运行、排查 bot-check 或封禁问题。
+- `balanced`：中等并发、1 秒延迟，适合 Cookie 有效后的常规爬取。
+- `fast-cache`：高并发、极低延迟，主要用于已有缓存或低风险的本地基准测试。
+
+示例：
+
+```powershell
+python run.py --format json --profile safe
+python run.py --format json --profile balanced
+python run.py --format json --profile fast-cache
+```
+
+也可以在 profile 后继续传入 Scrapy 设置。后面的设置可以覆盖 profile 的默认值：
+
+```powershell
+python run.py --format json --profile balanced -s CLOSESPIDER_PAGECOUNT=1
+```
+
+## 爬虫诊断日志
+
+每次运行会记录：
+
+- 生成的初始 URL 数量
+- Cookie 是否存在，但不会打印 Cookie 内容
+- 每个响应的 URL、状态码、耗时、缓存标记和解析出的 item 数量
+- 最终状态码分布、缓存命中、总 item 数、CPU/GPU item 数和失败 URL 数
+- JSON 或 CSV 输出写入耗时
+
+保存日志到文件：
+
+```powershell
+python run.py --format json --profile balanced -s LOG_FILE=logs/crawl.log
+```
+
+## 失败 URL 恢复
+
+失败 URL 会写入 `failed_urls.txt`。当前优化阶段先负责记录失败；后续可以再增加 `--retry-failed` 模式，只重跑这些失败 URL。
+
 ## 输出文件
 
 CSV 模式会生成：

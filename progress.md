@@ -19,3 +19,5 @@
 - 验证：`python -m unittest tests.test_crawl_metrics tests.test_tpu_spider_metrics tests.test_pipelines_metrics tests.test_diagnostic_settings -v` 通过 7 个测试；`python -m py_compile techpowerup\settings.py tests\test_diagnostic_settings.py` 通过。
 - Task 5 完成：`run.py` 新增 `--profile safe|balanced|fast-cache`，并把 profile settings 注入 Scrapy 命令。
 - 验证：`python -m unittest tests.test_crawl_metrics tests.test_tpu_spider_metrics tests.test_pipelines_metrics tests.test_diagnostic_settings tests.test_run_profiles -v` 通过 10 个测试；`python -m py_compile run.py tests\test_run_profiles.py` 通过。
+- Task 6 完成：英文和中文 README 增加性能档位、爬虫诊断日志和失败 URL 恢复说明。
+- 验证：`python -m unittest tests.test_crawl_metrics tests.test_tpu_spider_metrics tests.test_pipelines_metrics tests.test_diagnostic_settings tests.test_run_profiles tests.test_readme_docs -v` 通过 12 个测试；README 链接与代码块结构检查通过。

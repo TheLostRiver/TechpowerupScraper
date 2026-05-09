@@ -54,6 +54,48 @@ python run.py --format json
 
 `cookies.json` is ignored by git because it may contain sensitive session data.
 
+## Performance Profiles
+
+Use `run.py --profile` to choose a repeatable crawl speed:
+
+- `safe`: single request, 5 second delay, safest for first runs and bot-check troubleshooting.
+- `balanced`: moderate concurrency and 1 second delay, recommended after cookies are valid.
+- `fast-cache`: high concurrency and very low delay, intended for cached or low-risk local benchmark runs.
+
+Examples:
+
+```powershell
+python run.py --format json --profile safe
+python run.py --format json --profile balanced
+python run.py --format json --profile fast-cache
+```
+
+You can still pass extra Scrapy settings after the profile. Later settings can override profile values:
+
+```powershell
+python run.py --format json --profile balanced -s CLOSESPIDER_PAGECOUNT=1
+```
+
+## Crawl Diagnostics
+
+Each run logs:
+
+- generated start URL count
+- cookie presence without printing the cookie value
+- response URL, status, elapsed seconds, cache flag, and parsed item count
+- final status distribution, cache hits, total items, CPU/GPU item counts, and failed URL count
+- JSON or CSV output write duration
+
+To save logs to a file:
+
+```powershell
+python run.py --format json --profile balanced -s LOG_FILE=logs/crawl.log
+```
+
+## Failed URL Recovery
+
+Failed URLs are written to `failed_urls.txt`. The first optimization pass records failures only; a later pass can add a `--retry-failed` mode to rerun just those URLs.
+
 ## Output Files
 
 CSV mode writes:
