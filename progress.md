@@ -17,3 +17,5 @@
 - 验证：`python -m unittest tests.test_crawl_metrics tests.test_tpu_spider_metrics tests.test_pipelines_metrics -v` 通过 5 个测试；`python -m py_compile techpowerup\pipelines.py tests\test_pipelines_metrics.py` 通过。
 - Task 4 完成：新增 `DOWNLOAD_TIMEOUT`、`RETRY_*`、`FAILED_URLS_FILE`、`LOG_LEVEL`，并忽略 `logs/` 与 `failed_urls*.txt`。
 - 验证：`python -m unittest tests.test_crawl_metrics tests.test_tpu_spider_metrics tests.test_pipelines_metrics tests.test_diagnostic_settings -v` 通过 7 个测试；`python -m py_compile techpowerup\settings.py tests\test_diagnostic_settings.py` 通过。
+- Task 5 完成：`run.py` 新增 `--profile safe|balanced|fast-cache`，并把 profile settings 注入 Scrapy 命令。
+- 验证：`python -m unittest tests.test_crawl_metrics tests.test_tpu_spider_metrics tests.test_pipelines_metrics tests.test_diagnostic_settings tests.test_run_profiles -v` 通过 10 个测试；`python -m py_compile run.py tests\test_run_profiles.py` 通过。
