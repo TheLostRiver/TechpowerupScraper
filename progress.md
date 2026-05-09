@@ -26,3 +26,4 @@
 - balanced 当前 URL 集：6 个列表页，GPU 123，CPU 282，总计 405，cache hit 6，失败 0，JSON 写入约 0.005 秒。
 - JSON 校验：`python -m json.tool cpus.json` 和 `python -m json.tool gpus.json` 通过；输出文件保持 git ignored。
 - 发现：Scrapy 2.15.2 输出 `start_requests()` 与 pipeline 方法签名 deprecation warning，建议后续单独清理。
+- Task 8 完成：根据 405 条列表页 item 和 CPU 年份页 100 条上限迹象，决定详情页/分页抓取另开计划，不混入本轮观测优化分支。
