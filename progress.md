@@ -13,3 +13,5 @@
 - 验证：`python -m unittest tests.test_crawl_metrics -v` 通过 2 个测试；`python -m py_compile techpowerup\crawl_metrics.py tests\test_crawl_metrics.py` 通过。
 - Task 2 完成：`TpuSpider` 接入 `CrawlMetrics`，新增启动日志、响应日志、失败响应日志、关闭汇总和失败 URL 文件写入。
 - 验证：`python -m unittest tests.test_crawl_metrics tests.test_tpu_spider_metrics -v` 通过 3 个测试；`python -m py_compile techpowerup\spiders\tpu.py techpowerup\crawl_metrics.py tests\test_tpu_spider_metrics.py` 通过。
+- Task 3 完成：`CsvPipeline` 和 `JsonPipeline` 写入 `pipeline/*_items` 计数，并记录 CSV 关闭耗时与 JSON 写入耗时。
+- 验证：`python -m unittest tests.test_crawl_metrics tests.test_tpu_spider_metrics tests.test_pipelines_metrics -v` 通过 5 个测试；`python -m py_compile techpowerup\pipelines.py tests\test_pipelines_metrics.py` 通过。
