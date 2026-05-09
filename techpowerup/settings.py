@@ -15,6 +15,10 @@ NEWSPIDER_MODULE = 'techpowerup.spiders'
 # Output format: 'csv' or 'json'
 OUTPUT_FORMAT = 'csv'
 
+# Crawl diagnostics / 爬虫诊断输出
+FAILED_URLS_FILE = 'failed_urls.txt'
+LOG_LEVEL = 'INFO'
+
 # Browser Cookie for bypassing bot check
 # Steps to get:
 #   1. Open https://www.techpowerup.com/gpu-specs/ in your browser
@@ -36,6 +40,14 @@ CONCURRENT_REQUESTS = 1
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
 DOWNLOAD_DELAY = 5 #The slower the better because the website has rate limiting
+
+# Network safety / 网络安全边界：avoid hanging indefinitely on slow responses.
+# 避免慢响应无限卡住，同时只对临时错误做有限重试。
+DOWNLOAD_TIMEOUT = 30
+RETRY_ENABLED = True
+RETRY_TIMES = 2
+RETRY_HTTP_CODES = [408, 429, 500, 502, 503, 504]
+
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16

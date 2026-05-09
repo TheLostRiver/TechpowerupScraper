@@ -68,6 +68,10 @@ instance/
 # Scrapy stuff:
 .scrapy
 
+# Generated crawl diagnostics
+logs/
+failed_urls*.txt
+
 # Local agent/plugin state
 .claude/
 *.claudeplugins/
