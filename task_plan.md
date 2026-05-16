@@ -55,7 +55,7 @@
 
 ## 阶段 4：请求调度与失败恢复
 
-状态：in_progress
+状态：complete
 
 要做：
 - 明确当前目标是年份列表页，还是还要进入详情页抓取数千条 item。
@@ -81,7 +81,7 @@
 
 ## 阶段 6：验证与回归
 
-状态：in_progress
+状态：complete
 
 要做：
 - 小样本：限制 1-2 个 URL，确认日志和解析正确。
@@ -98,3 +98,9 @@
 - 先补观测能力，再调并发。
 - 不直接把 `CONCURRENT_REQUESTS` 从 1 提到很高。
 - 优先在 Scrapy 框架内优化。
+
+## Errors Encountered
+
+| Error | Attempt | Resolution |
+|-------|---------|------------|
+| `python -m unittest discover -v` ran 0 tests | Tried default unittest discovery as full regression evidence | Switched to the repository's explicit test module list and verified 16 tests pass |

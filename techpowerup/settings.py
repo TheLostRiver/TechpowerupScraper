@@ -47,6 +47,8 @@ DOWNLOAD_TIMEOUT = 30
 RETRY_ENABLED = True
 RETRY_TIMES = 2
 RETRY_HTTP_CODES = [408, 429, 500, 502, 503, 504]
+TPU_RETRY_AFTER_DEFAULT_DELAY = 30
+TPU_RETRY_AFTER_MAX_DELAY = 60
 
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
@@ -73,9 +75,9 @@ DEFAULT_REQUEST_HEADERS = {
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    'techpowerup.middlewares.TechpowerupDownloaderMiddleware': 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+    'techpowerup.middlewares.RetryAfterMiddleware': 560,
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html

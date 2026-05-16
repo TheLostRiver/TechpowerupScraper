@@ -94,7 +94,19 @@ python run.py --format json --profile balanced -s LOG_FILE=logs/crawl.log
 
 ## Failed URL Recovery
 
-Failed URLs are written to `failed_urls.txt`. The first optimization pass records failures only; a later pass can add a `--retry-failed` mode to rerun just those URLs.
+Failed URLs are written to `failed_urls.txt`. Rerun only those URLs with:
+
+```powershell
+python run.py --retry-failed failed_urls.txt
+```
+
+You can combine recovery runs with the normal output and profile flags:
+
+```powershell
+python run.py --format json --profile safe --retry-failed failed_urls.txt
+```
+
+HTTP 429 responses are retried by Scrapy and the crawler waits for `Retry-After` when the server provides it, capped by `TPU_RETRY_AFTER_MAX_DELAY`.
 
 ## Output Files
 

@@ -1,4 +1,6 @@
 import unittest
+from tempfile import TemporaryDirectory
+from pathlib import Path
 
 from scrapy.http import HtmlResponse, Request
 
@@ -47,6 +49,32 @@ class TpuSpiderMetricsTests(unittest.TestCase):
         self.assertEqual(summary["status_counts"], {200: 1})
         self.assertEqual(summary["parsed_items"], 1)
         self.assertEqual(summary["item_counts"], {"GPU": 1})
+
+    def test_start_requests_can_use_failed_url_file(self):
+        with TemporaryDirectory() as tmpdir:
+            failed_file = Path(tmpdir) / "failed_urls.txt"
+            failed_file.write_text(
+                "\n".join(
+                    [
+                        "https://www.techpowerup.com/gpu-specs/?year=2026",
+                        "",
+                        "https://www.techpowerup.com/cpu-specs/?year=2026",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            spider = TpuSpider(retry_failed_file=str(failed_file))
+            requests = list(spider.start_requests())
+
+        self.assertEqual(
+            [request.url for request in requests],
+            [
+                "https://www.techpowerup.com/gpu-specs/?year=2026",
+                "https://www.techpowerup.com/cpu-specs/?year=2026",
+            ],
+        )
+        self.assertEqual(spider.start_urls_count, 2)
 
 
 if __name__ == "__main__":

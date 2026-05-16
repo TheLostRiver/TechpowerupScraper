@@ -66,3 +66,17 @@
   - 详情页 URL 提取、去重、并发上限。
   - 断点续爬和失败 URL 重跑。
   - 100、1000、全量三档 benchmark。
+
+## 2026-05-16 阶段 4 缺口复核
+
+- `techpowerup/spiders/tpu.py` 已能把失败响应记录到 metrics，并在关闭时写入 `FAILED_URLS_FILE`。
+- `techpowerup/settings.py` 已启用 Scrapy retry，并覆盖 408、429、500、502、503、504；403/410 不在重试码中，符合“默认只记录”的计划约束。
+- 当前仍缺少“失败 URL 可以单独重跑”的入口；README 也写明当前只是记录失败，后续再加 `--retry-failed`。
+- 当前没有针对 429 `Retry-After` 或较长退避的自有测试/中间件；需要用最小 downloader middleware 在重试前记录并阻塞一个可配置的短等待，实际默认可保守一些，测试中用 0 秒避免拖慢。
+
+## 2026-05-16 阶段 4 实现结果
+
+- `run.py --retry-failed failed_urls.txt` 会转成 Scrapy spider 参数 `-a retry_failed_file=failed_urls.txt`。
+- `TpuSpider` 在提供 `retry_failed_file` 时只从该文件读取非空、非注释、去重后的 URL 作为起始请求；默认模式仍生成当前 CPU/GPU 年份列表页。
+- 新增 `RetryAfterMiddleware`，仅对 429 响应生效，读取 `Retry-After` 秒数或 HTTP 日期，按 `TPU_RETRY_AFTER_MAX_DELAY` 封顶后再把响应交给 Scrapy retry middleware。
+- README 英文/中文已改为实际的失败 URL 重跑命令，并说明 429 会按 `Retry-After` 保守等待。

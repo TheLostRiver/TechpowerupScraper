@@ -12,6 +12,7 @@ class ReadmeDocsTests(unittest.TestCase):
         self.assertIn("## Crawl Diagnostics", readme)
         self.assertIn("LOG_FILE=logs/crawl.log", readme)
         self.assertIn("## Failed URL Recovery", readme)
+        self.assertIn("python run.py --retry-failed failed_urls.txt", readme)
 
     def test_chinese_readme_documents_profiles_and_diagnostics(self):
         readme = Path("README.zh-CN.md").read_text(encoding="utf-8")
@@ -22,6 +23,7 @@ class ReadmeDocsTests(unittest.TestCase):
         self.assertIn("## 爬虫诊断日志", readme)
         self.assertIn("LOG_FILE=logs/crawl.log", readme)
         self.assertIn("## 失败 URL 恢复", readme)
+        self.assertIn("python run.py --retry-failed failed_urls.txt", readme)
 
 
 if __name__ == "__main__":

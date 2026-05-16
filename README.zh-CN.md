@@ -94,7 +94,19 @@ python run.py --format json --profile balanced -s LOG_FILE=logs/crawl.log
 
 ## 失败 URL 恢复
 
-失败 URL 会写入 `failed_urls.txt`。当前优化阶段先负责记录失败；后续可以再增加 `--retry-failed` 模式，只重跑这些失败 URL。
+失败 URL 会写入 `failed_urls.txt`。可以只重跑这些 URL：
+
+```powershell
+python run.py --retry-failed failed_urls.txt
+```
+
+重跑时也可以继续组合常规输出格式和性能档位：
+
+```powershell
+python run.py --format json --profile safe --retry-failed failed_urls.txt
+```
+
+HTTP 429 响应会交给 Scrapy retry，并在服务端返回 `Retry-After` 时先等待；等待时间会受 `TPU_RETRY_AFTER_MAX_DELAY` 限制。
 
 ## 输出文件
 

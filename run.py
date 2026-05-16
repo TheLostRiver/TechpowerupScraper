@@ -44,6 +44,7 @@ def main():
     format = 'csv'
     cookie = ''
     profile = ''
+    retry_failed_file = ''
     args = sys.argv[1:]
 
     # Parse --format
@@ -74,6 +75,17 @@ def main():
             print("Error: --profile requires a value (safe, balanced, or fast-cache).")
             sys.exit(1)
 
+    # Parse --retry-failed
+    if '--retry-failed' in args:
+        idx = args.index('--retry-failed')
+        if idx + 1 < len(args):
+            retry_failed_file = args[idx + 1]
+            args.pop(idx)
+            args.pop(idx)
+        else:
+            print("Error: --retry-failed requires a failed URL file path.")
+            sys.exit(1)
+
     # Parse --cookie
     if '--cookie' in args:
         idx = args.index('--cookie')
@@ -96,6 +108,8 @@ def main():
 
     # Build scrapy command
     cmd = ['scrapy', 'crawl', 'tpu', '-s', f'OUTPUT_FORMAT={format}']
+    if retry_failed_file:
+        cmd += ['-a', f'retry_failed_file={retry_failed_file}']
     if cookie:
         cmd += ['-s', f'BROWSER_COOKIE={cookie}']
     if profile:

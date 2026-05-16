@@ -44,6 +44,20 @@ class RunProfileTests(unittest.TestCase):
         self.assertIn("DOWNLOAD_DELAY=1", captured["argv"])
         self.assertIn("AUTOTHROTTLE_TARGET_CONCURRENCY=2.0", captured["argv"])
 
+    def test_retry_failed_adds_spider_argument(self):
+        captured = {}
+
+        def fake_execute():
+            captured["argv"] = list(sys.argv)
+
+        with patch.object(sys, "argv", ["run.py", "--retry-failed", "failed_urls.txt"]):
+            with patch.object(run, "load_cookie_from_file", lambda: ""):
+                with patch.object(run.scrapy.cmdline, "execute", fake_execute):
+                    run.main()
+
+        self.assertIn("-a", captured["argv"])
+        self.assertIn("retry_failed_file=failed_urls.txt", captured["argv"])
+
 
 if __name__ == "__main__":
     unittest.main()

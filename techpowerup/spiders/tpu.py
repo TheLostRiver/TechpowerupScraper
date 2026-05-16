@@ -16,10 +16,11 @@ class TpuSpider(scrapy.Spider):
     allowed_domains = ['www.techpowerup.com']
     handle_httpstatus_list = [403,404,429,410,500]
 
-    def __init__(self, *args, cookie='', **kwargs):
+    def __init__(self, *args, cookie='', retry_failed_file='', **kwargs):
         super().__init__(*args, **kwargs)
         self.failed_urls = []
         self.cookie = cookie
+        self.retry_failed_file = retry_failed_file
         self.metrics = CrawlMetrics()
         self.start_urls_count = 0
 
@@ -31,18 +32,19 @@ class TpuSpider(scrapy.Spider):
         return spider
 
     def start_requests(self):
-        urls = gpu_urls + cpu_urls
+        urls = self.load_start_urls()
         self.start_urls_count = len(urls)
         headers = {}
         if self.cookie:
             headers['Cookie'] = self.cookie
 
         self.logger.info(
-            "crawl_start urls=%s years=%s-%s cookie_present=%s",
+            "crawl_start urls=%s years=%s-%s cookie_present=%s retry_failed_file=%s",
             self.start_urls_count,
             years.start,
             years.stop - 1,
             bool(self.cookie),
+            self.retry_failed_file or "",
         )
 
         for url in urls:
@@ -51,6 +53,21 @@ class TpuSpider(scrapy.Spider):
                 headers=headers,
                 meta={"request_started_at": perf_counter()},
             )
+
+    def load_start_urls(self):
+        if not self.retry_failed_file:
+            return gpu_urls + cpu_urls
+
+        urls = []
+        seen = set()
+        failed_path = Path(self.retry_failed_file)
+        for line in failed_path.read_text(encoding="utf-8").splitlines():
+            url = line.strip()
+            if not url or url.startswith("#") or url in seen:
+                continue
+            seen.add(url)
+            urls.append(url)
+        return urls
 
     def parse(self, response):
         if response.status in [403, 404, 429, 410, 500]:

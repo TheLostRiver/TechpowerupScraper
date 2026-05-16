@@ -3,6 +3,10 @@
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
+from time import sleep
+
 from scrapy import signals
 
 # useful for handling different item types with a single interface
@@ -101,3 +105,55 @@ class TechpowerupDownloaderMiddleware:
 
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
+
+
+class RetryAfterMiddleware:
+    def __init__(self, default_delay=30.0, max_delay=60.0):
+        self.default_delay = default_delay
+        self.max_delay = max_delay
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        settings = crawler.settings
+        return cls(
+            default_delay=settings.getfloat("TPU_RETRY_AFTER_DEFAULT_DELAY", 30.0),
+            max_delay=settings.getfloat("TPU_RETRY_AFTER_MAX_DELAY", 60.0),
+        )
+
+    def process_response(self, request, response, spider):
+        if response.status != 429:
+            return response
+
+        delay = self.retry_after_delay(response)
+        if delay > 0:
+            if spider:
+                spider.logger.warning(
+                    "retry_after_backoff url=%s delay=%.3fs",
+                    response.url,
+                    delay,
+                )
+            sleep(delay)
+        return response
+
+    def retry_after_delay(self, response):
+        value = response.headers.get("Retry-After")
+        if not value:
+            return self.default_delay
+
+        text = value.decode("utf-8", errors="ignore").strip()
+        try:
+            delay = float(text)
+        except ValueError:
+            delay = self.retry_after_http_date_delay(text)
+
+        return max(0.0, min(delay, self.max_delay))
+
+    def retry_after_http_date_delay(self, text):
+        try:
+            retry_at = parsedate_to_datetime(text)
+        except (TypeError, ValueError):
+            return self.default_delay
+
+        if retry_at.tzinfo is None:
+            retry_at = retry_at.replace(tzinfo=timezone.utc)
+        return (retry_at - datetime.now(timezone.utc)).total_seconds()
